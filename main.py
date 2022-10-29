@@ -1,9 +1,12 @@
+from re import X
 from turtle import width
+from cv2 import circle
 from matplotlib import lines
 import matplotlib.pylab as plt
 import cv2
 from matplotlib.pyplot import gray
 import numpy as np
+import matplotlib.pyplot as plt
 
 ################################################################################################################
 
@@ -13,7 +16,7 @@ gray_image = cv2.cvtColor(lane_image, cv2.COLOR_RGB2GRAY)#convert the image to g
 
 # smooth the graysacle image using gaussianblur method 
 blur =cv2.GaussianBlur(gray_image, (5,5),0)
-cv2.imshow("gray image",blur)
+#cv2.imshow("gray image",blur)
 ###############################################################################################################
 print(image.shape)
 height = image.shape[0]#get the hieght of image
@@ -52,7 +55,7 @@ def display_lines(image, lines):
     #line_image =np.zeros_like(image)
     if lines is not None:
         for x1,y1,x2,y2 in lines:
-            cv2.line(line_image, (x1,y1),(x2,y2),(0,255,0),10)
+            cv2.line(line_image, (x1,y1),(x2,y2),(255,0,0),6)
     return line_image
 ####################################################################################################################
 def make_coordinates(iamge ,line_paarameters):
@@ -99,17 +102,36 @@ lines =cv2.HoughLinesP(cropped_image, rho=10,theta=np.pi/180, threshold=100,line
 #image_with_lines =drow_the_lines(image, lines)
 
 averaged_lines =average_slope_itercept(lane_image,lines)
+print(averaged_lines)
 #image_with_lines =drow_the_lines(lane_image,averaged_lines)
+#######################################################################################################################
+x1 = averaged_lines[0][0]
+y1 = averaged_lines[0][1]
+x2 = averaged_lines[0][2]
+y2 = averaged_lines[0][3]
+x3 = averaged_lines[1][0]
+y3 = averaged_lines[1][1]
+x4 = averaged_lines[1][2]
+y4 = averaged_lines[1][3]
+
+u = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))
+print(u)
+x = x1 + u * (x2-x1)
+y = y1 + u * (y2-y1)
 
 
+print(x,y)
 #######################################################
 line_image1 =display_lines(lane_image , averaged_lines)
 combo_image = cv2.addWeighted(lane_image, 0.8, line_image1,1,1)
-
+cv2.circle(combo_image, (int(x),int(y)), 10,(255,255,0),3 )
 ########################################################
 #sobel_image = cv2.Sobel(gray_image, 100,20)
-plt.imshow(canny_image)
+#plt.imshow(canny_image)
 #cv2.imshow("result", cropped_image)
-cv2.imshow("result1",combo_image)
+rgb_image = cv2.cvtColor(combo_image, cv2.COLOR_RGB2BGR)
+cv2.imshow("result1",rgb_image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 #plt.imshow(image_with_lines)
-plt.show()
+#plt.show()
