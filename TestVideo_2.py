@@ -6,7 +6,7 @@ import glob
 def make_coordinates(image, line_parameters):
     slope, intercept = line_parameters
     y1 = image.shape[0]
-    y2 = int(y1*(3/5))
+    y2 = int(y1*(2.5/5))
     x1 = int((y1 - intercept)/slope)
     x2 = int((y2 - intercept)/slope)
     return np.array([x1, y1, x2, y2])
@@ -57,13 +57,28 @@ def mark_lanes(lane_image):
     cropped_image = region_of_interest(canny_image)
     lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5)
     averaged_lines = average_slope_intercept(lane_image, lines)
+    x1 = averaged_lines[0][0]
+    y1 = averaged_lines[0][1]
+    x2 = averaged_lines[0][2]
+    y2 = averaged_lines[0][3]
+    x3 = averaged_lines[1][0]
+    y3 = averaged_lines[1][1]
+    x4 = averaged_lines[1][2]
+    y4 = averaged_lines[1][3]
+    u = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))
+    #print(u)
+    x = x1 + u * (x2-x1)
+    y = y1 + u * (y2-y1)
+    #print(x,y)
+    circle_image = cv2.circle(lane_image, (int(x),int(y)), 10,(255,255,0),3 )
     line_image = display_lines(lane_image, averaged_lines)
-    combo_image = cv2.addWeighted(lane_image, 0.8, line_image, 1, 1)
+    combo_image1 = cv2.addWeighted(lane_image, 0.1, line_image, 1, 1)
+    combo_image = cv2.addWeighted(combo_image1, 1, circle_image, 1, 1)
     return combo_image
 
 def createVideo():
     img_array = []
-    for filename in glob.glob('Output/*.jpg'):
+    for filename in glob.glob('Output_TestVideo_2/*.jpg'):
         img = cv2.imread(filename)
         height, width, layers = img.shape
         size = (width,height)
