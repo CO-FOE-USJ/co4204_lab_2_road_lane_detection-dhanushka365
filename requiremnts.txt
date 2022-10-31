@@ -1,6 +1,0 @@
-pip install tk
-
-sudo apt-get install python3-tk
-
-pip install parameters
-sudo apt install qtwayland5
