@@ -30,8 +30,11 @@ def average_slope_intercept(image, lines):
     return np.array([left_line, right_line])
 #########################################################################################################################################
 def canny(image):
+    #Grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    #Gaussian Smoothing
     blur = cv2.GaussianBlur(gray,(5, 5), 0)
+    #Canny Edge Detection
     canny = cv2.Canny(blur, 50, 150)
     return canny
 ########################################################################################################################################
@@ -44,17 +47,26 @@ def display_lines(image, lines):
 ########################################################################################################################################
 def region_of_interest(image):
     height = image.shape[0]
+    width = image.shape[1]
+    #print(height)
+    #print(width)
+    #optimal =400
+    #polygons = np.array([[(0, height), (0, optimal), (width, optimal), (width, height)]])
+    #polygons = np.array([[(0, height), (0, 400), (width, 400), (width, height)]])
     #polygons = np.array([[(200, height), (1100, height), (550, 250)]])
     polygons = np.array([[(0, image.shape[0]), (250, 290), (180, 320), (image.shape[1], image.shape[0])]])
     #polygons = np.array([[(0, image.shape[0]),(0, image.shape[0]-100), (290, 320), (340, 320), (image.shape[1]-150, image.shape[0])]])
+    vertices =polygons
     mask = np.zeros_like(image)
-    cv2.fillPoly(mask, polygons, 255)
+    cv2.fillPoly(mask, vertices, 255)
+    #Masked Image Within a Polygon
     masked_image = cv2.bitwise_and(image, mask)
     return masked_image
 
 def mark_lanes(lane_image):
     canny_image = canny(lane_image)
     cropped_image = region_of_interest(canny_image)
+    #Hough Transform Lines
     lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5)
     averaged_lines = average_slope_intercept(lane_image, lines)
     x1 = averaged_lines[0][0]
@@ -71,6 +83,7 @@ def mark_lanes(lane_image):
     y = y1 + u * (y2-y1)
     #print(x,y)
     circle_image = cv2.circle(lane_image, (int(x),int(y)), 10,(255,255,0),3 )
+    #Draw lines on edges
     line_image = display_lines(lane_image, averaged_lines)
     combo_image1 = cv2.addWeighted(lane_image, 0.1, line_image, 1, 1)
     combo_image = cv2.addWeighted(combo_image1, 0.7, circle_image, 1, 1)

@@ -44,19 +44,47 @@ def display_lines(image, lines):
 ########################################################################################################################################
 def region_of_interest(image):
     height = image.shape[0]
+    width =image.shape[1]
+    #print(height)
+    print(width)
+
+    #--------------> x  
+    #-----------------------------------------------------------------#
+    # (0,0)                                                    (800,0)#
+    #                                                                 #
+    #                                                                 #
+    #                                                                 #
+    #-----------------(290 ,320)-------------(340, 320)---------------#
+    #             #                                   #               #
+    #       #                                              #          #
+    # # (0,500)                                                     # #
+    # (0,height=600)                               (width=800,height) #
+    #-----------------------------------------------------------------#
+    optimal =200 #we should select a better value for this
     #polygons = np.array([[(200, height), (1100, height), (550, 250)]])
-    #polygons = np.array([[(0, image.shape[0]), (250, 290), (180, 320), (image.shape[1], image.shape[0])]])
-    polygons = np.array([[(0, image.shape[0]),(0, image.shape[0]-100), (290, 320), (340, 320), (image.shape[1]-150, image.shape[0])]])
+    #polygons = np.array([[(0, height), (width-450, optimal), (width-150, optimal), (width, height)]])
+    polygons = np.array([[(0, image.shape[0]),(0, image.shape[0]-50), (300, 320), (340, 320), (image.shape[1]-150, image.shape[0])]])
+    vertices =polygons
     mask = np.zeros_like(image)
-    cv2.fillPoly(mask, polygons, 255)
+    cv2.fillPoly(mask, vertices, 255)
     masked_image = cv2.bitwise_and(image, mask)
     return masked_image
 
 def mark_lanes(lane_image):
     canny_image = canny(lane_image)
     cropped_image = region_of_interest(canny_image)
+    # Define the Hough transform parameters
+    #I have directly passe the following values
+    # Make a blank the same size as our image to draw on
+    #rho = distance resolution in pixels of the Hough grid
+    #theta =  angular resolution in radians of the Hough grid
+    #threshold = minimum number of votes (intersections in Hough grid cell)
+    #min_line_length =minimum number of pixels making up a line
+    #max_line_gap = maximum gap in pixels between connectable line segments
+
     lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5)
     averaged_lines = average_slope_intercept(lane_image, lines)
+    #using the two average lines the cordinates were oserved
     x1 = averaged_lines[0][0]
     y1 = averaged_lines[0][1]
     x2 = averaged_lines[0][2]
